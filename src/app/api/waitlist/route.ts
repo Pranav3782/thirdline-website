@@ -3,7 +3,12 @@ import path from "node:path";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Local development only. In production the form posts to Netlify Forms (see public/__forms.html). */
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV !== "development") {
+    return Response.json({ error: "Not found." }, { status: 404 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -23,7 +28,6 @@ export async function POST(request: Request) {
 
   const entry = { name, email, topic, role, createdAt: new Date().toISOString() };
 
-  // Local JSONL store; swap for a database or email tool before deploying to serverless hosting.
   const dir = path.join(process.cwd(), "data");
   await mkdir(dir, { recursive: true });
   await appendFile(path.join(dir, "waitlist.jsonl"), JSON.stringify(entry) + "\n");

@@ -47,15 +47,24 @@ export function WaitlistProvider({ children }: { children: ReactNode }) {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const data = Object.fromEntries(new FormData(form));
+    const data = new FormData(form);
+    data.set("role", role);
     setStatus("submitting");
     setError("");
     try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, role }),
-      });
+      // Netlify Forms only accepts posts to a static file; `next dev` can't serve that, so dev saves locally.
+      const res =
+        process.env.NODE_ENV === "development"
+          ? await fetch("/api/waitlist", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(Object.fromEntries(data)),
+            })
+          : await fetch("/__forms.html", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(data as unknown as Record<string, string>).toString(),
+            });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Something went wrong. Please try again.");
       setStatus("success");
@@ -134,7 +143,13 @@ export function WaitlistProvider({ children }: { children: ReactNode }) {
               </button>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="mt-6 space-y-4">
+            <form name="waitlist" onSubmit={onSubmit} className="mt-6 space-y-4">
+              <input type="hidden" name="form-name" value="waitlist" />
+              <p className="hidden" aria-hidden>
+                <label>
+                  Leave this empty: <input name="bot-field" tabIndex={-1} autoComplete="off" />
+                </label>
+              </p>
               <Field label="Name" name="name" autoComplete="name" required />
               <Field label="Email" name="email" type="email" autoComplete="email" required />
               <Field
