@@ -45,10 +45,11 @@ export type Scene = {
 
 export const video = {
   title: "Rahul's story: why founders stay stuck",
-  // Set to e.g. "/video/rahul-story.mp4" once the AI-generated video is in /public/video.
-  src: null as string | null,
-  poster: null as string | null,
-  captions: "/video/rahul-story.vtt",
+  // Set to null to fall back to the animated storyboard player.
+  src: "/video/rahul-story.mp4" as string | null,
+  poster: "/video/rahul-story-poster.jpg" as string | null,
+  // The final video has captions burned in, so it gets no separate track.
+  captions: null as string | null,
 };
 
 export const scenes: Scene[] = [

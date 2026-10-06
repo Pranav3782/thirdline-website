@@ -12,25 +12,117 @@ function formatTime(seconds: number) {
 }
 
 export function ProductVideo() {
-  if (video.src) {
-    return (
-      <div className="overflow-hidden rounded-2xl bg-ink">
+  return video.src ? <VideoPlayer src={video.src} /> : <StoryboardPlayer />;
+}
+
+function VideoPlayer({ src }: { src: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [started, setStarted] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
+
+  const start = () => {
+    setStarted(true);
+    ref.current?.play().catch(() => {});
+  };
+
+  return (
+    <div>
+      <div className="group relative aspect-video overflow-hidden rounded-2xl bg-ink">
         <video
-          controls
-          preload="none"
+          ref={ref}
+          controls={started}
+          preload="metadata"
           playsInline
           poster={video.poster ?? undefined}
           aria-label={video.title}
-          className="aspect-video w-full"
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onPlay={() => setStarted(true)}
+          className="h-full w-full"
         >
-          <source src={video.src} type="video/mp4" />
-          <track src={video.captions} kind="captions" srcLang="en" label="English" default />
+          <source src={src} type="video/mp4" />
+          {video.captions && <track src={video.captions} kind="captions" srcLang="en" label="English" default />}
           Your browser does not support the video tag.
         </video>
+        {!started && (
+          <button
+            type="button"
+            onClick={start}
+            aria-label={`Play: ${video.title}`}
+            className="absolute inset-0 flex items-center justify-center bg-ink/25 transition hover:bg-ink/15"
+          >
+            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-lime text-ink transition group-hover:scale-105">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" />
+              </svg>
+            </span>
+            <span className="absolute bottom-4 left-4 flex items-center gap-1.5 rounded-full bg-ink/80 py-1 pl-1 pr-3 text-xs font-semibold text-white sm:bottom-5 sm:left-5">
+              <LogoMark variant="inverse" className="h-5 w-5" /> Meet Rahul
+              {duration !== null && <span className="font-normal text-white/70 tabular-nums">· {formatTime(duration)}</span>}
+            </span>
+          </button>
+        )}
       </div>
-    );
-  }
-  return <StoryboardPlayer />;
+      <ScriptPanel items={scenes.map((_, sceneIndex) => ({ sceneIndex }))} />
+    </div>
+  );
+}
+
+type ScriptItem = { sceneIndex: number; start?: number };
+
+function ScriptPanel({
+  items,
+  activeScene,
+  onSeek,
+}: {
+  items: ScriptItem[];
+  activeScene?: number;
+  onSeek?: (time: number) => void;
+}) {
+  return (
+    <details className="group/script mt-5 rounded-2xl bg-mist">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold [&::-webkit-details-marker]:hidden">
+        <span>
+          Read the full script <span className="font-normal text-muted">· Rahul&apos;s story, 11 scenes</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="transition group-open/script:rotate-180" aria-hidden>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <ol className="divide-y divide-line border-t border-line">
+        {items.map(({ sceneIndex, start }) => {
+          const s = scenes[sceneIndex];
+          return (
+            <li key={sceneIndex} className={`px-5 py-5 transition ${sceneIndex === activeScene ? "bg-lime/25" : ""}`}>
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="font-display text-lg font-bold">
+                  <span className="mr-2 text-leaf tabular-nums">{s.number}</span>
+                  {s.title}
+                </p>
+                {onSeek && start !== undefined && (
+                  <button
+                    type="button"
+                    onClick={() => onSeek(start)}
+                    className="shrink-0 text-xs font-medium text-leaf tabular-nums underline-offset-4 hover:underline"
+                  >
+                    ▶ {formatTime(start)}
+                  </button>
+                )}
+              </div>
+              <p className="mt-2 max-w-[70ch] text-sm leading-relaxed text-muted">
+                <span className="mr-1.5 font-semibold text-ink">Screen:</span>
+                {s.screen}
+                {s.onScreen.length > 0 && <> Text on screen: {s.onScreen.map((t) => `“${t}”`).join(" ")}</>}
+              </p>
+              <p className="mt-2 max-w-[70ch] text-[15px] leading-relaxed text-ink">
+                <span className="mr-1.5 font-semibold text-leaf">Voiceover:</span>
+                {s.voiceover.join(" ")}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    </details>
+  );
 }
 
 function StoryboardPlayer() {
@@ -265,51 +357,14 @@ function StoryboardPlayer() {
         </div>
       </div>
 
-      <details className="group/script mt-5 rounded-2xl bg-mist">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold [&::-webkit-details-marker]:hidden">
-          <span>
-            Read the full script <span className="font-normal text-muted">· Rahul&apos;s story, 11 scenes</span>
-          </span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="transition group-open/script:rotate-180" aria-hidden>
-            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </summary>
-        <ol className="divide-y divide-line border-t border-line">
-          {chapters.map(({ sceneIndex, start }) => {
-            const s = scenes[sceneIndex];
-            const active = sceneIndex === beat.sceneIndex && started;
-            return (
-              <li key={sceneIndex} className={`px-5 py-5 transition ${active ? "bg-lime/25" : ""}`}>
-                <div className="flex items-baseline justify-between gap-4">
-                  <p className="font-display text-lg font-bold">
-                    <span className="mr-2 text-leaf tabular-nums">{s.number}</span>
-                    {s.title}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      seek(start);
-                      setPlaying(true);
-                    }}
-                    className="shrink-0 text-xs font-medium text-leaf tabular-nums underline-offset-4 hover:underline"
-                  >
-                    ▶ {formatTime(start)}
-                  </button>
-                </div>
-                <p className="mt-2 max-w-[70ch] text-sm leading-relaxed text-muted">
-                  <span className="mr-1.5 font-semibold text-ink">Screen:</span>
-                  {s.screen}
-                  {s.onScreen.length > 0 && <> Text on screen: {s.onScreen.map((t) => `“${t}”`).join(" ")}</>}
-                </p>
-                <p className="mt-2 max-w-[70ch] text-[15px] leading-relaxed text-ink">
-                  <span className="mr-1.5 font-semibold text-leaf">Voiceover:</span>
-                  {s.voiceover.join(" ")}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-      </details>
+      <ScriptPanel
+        items={chapters}
+        activeScene={started ? beat.sceneIndex : undefined}
+        onSeek={(start) => {
+          seek(start);
+          setPlaying(true);
+        }}
+      />
     </div>
   );
 }
