@@ -42,3 +42,6 @@ next-env.d.ts
 
 # waitlist signups (local dev store)
 /data
+
+# netlify
+.netlify
