@@ -1,4 +1,6 @@
 import { BookingInfographic } from "@/components/booking-infographic";
+import { ExamplesSection } from "@/components/examples-section";
+import { FoundersSection } from "@/components/founders";
 import { HeroArt } from "@/components/hero-art";
 import { HeroInfographic } from "@/components/hero-infographic";
 import { ProductVideo } from "@/components/product-video";
@@ -6,7 +8,6 @@ import {
   Arrow,
   Eyebrow,
   Highlight,
-  IconTile,
   Logo,
   LogoMark,
   Portrait,
@@ -16,7 +17,7 @@ import {
   type Tint,
 } from "@/components/ui";
 import { WaitlistButton, WaitlistProvider } from "@/components/waitlist";
-import { examples, video } from "@/lib/content";
+import { video } from "@/lib/content";
 
 const nav = [
   { href: "#problem", label: "Problem" },
@@ -24,6 +25,7 @@ const nav = [
   { href: "#how-it-works", label: "How it works" },
   { href: "#who", label: "Who it's for" },
   { href: "#examples", label: "Examples" },
+  { href: "#founders", label: "Founders" },
 ];
 
 export default function Home() {
@@ -37,7 +39,8 @@ export default function Home() {
         <ProductProblem />
         <HowItWorks />
         <WhoItsFor />
-        <Examples />
+        <ExamplesSection />
+        <FoundersSection />
         <FinalCta />
       </main>
       <Footer />
@@ -293,35 +296,7 @@ function WhoItsFor() {
   );
 }
 
-const exampleIcons = [
-  "target", "sprout", "group", "sprout", "group", "target", "book", "chat",
-  "bulb", "search", "group", "group", "chat", "chat", "bulb",
-] as const;
-const exampleTints: Tint[] = ["lavender", "butter", "peach", "sky"];
 
-function Examples() {
-  return (
-    <Section id="examples" className="bg-mist">
-      <div className="max-w-3xl">
-        <Eyebrow>Examples</Eyebrow>
-        <h2 className="mt-4 font-display text-4xl font-bold leading-[1.08] sm:text-5xl">
-          If you are a founder and you don&apos;t know how to…
-        </h2>
-      </div>
-      <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {examples.map((ex, i) => (
-          <li key={ex.problem} className="flex gap-4 rounded-2xl bg-white p-5 ring-1 ring-line transition hover:ring-ink">
-            <IconTile name={exampleIcons[i]} tint={exampleTints[i % exampleTints.length]} />
-            <div>
-              <h3 className="font-display text-xl font-bold leading-tight">{ex.problem}</h3>
-              <p className="mt-1.5 text-[15px] leading-snug text-muted">{ex.mentor}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Section>
-  );
-}
 
 function FinalCta() {
   return (
